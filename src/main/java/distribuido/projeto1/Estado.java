@@ -2,9 +2,9 @@ package distribuido.projeto1;
 
 
 public enum Estado {
-	RELEASED("Released"),
-	WANTED("Wanted"),
-	HELD("Held");
+	NORMAL("Normal"),
+	ELEICAO("Eleicao"),
+	COORD("Coordenador");
 	
 	private String descricao;
 	

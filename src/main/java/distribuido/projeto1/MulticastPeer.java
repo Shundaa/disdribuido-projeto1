@@ -8,12 +8,12 @@ import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.SocketAddress;
 import java.net.SocketException;
-import java.util.Arrays;
+import java.net.SocketTimeoutException;
 
 public class MulticastPeer {
 	static String host = "239.252.10.10";
 
-	static public void pedirRecursoMultcast(int port) {
+	static public void enviarIdCoord(int port) {
 		MulticastSocket s = null;
 		try {
 			InetAddress group = InetAddress.getByName(host);
@@ -31,8 +31,14 @@ public class MulticastPeer {
 				s.close();
 		}
 	}
+	static public String enviarOla() {
+		return null;
+	}
 
-	static public String escutarMultcast() {
+	static public String receberOla() throws Exception{
+		return null;
+	}
+	static public String receberCoord() throws Exception{
 		MulticastSocket s = null;
 		DatagramPacket messageIn=null;
 		try {
@@ -40,12 +46,9 @@ public class MulticastPeer {
 			InetAddress group = InetAddress.getByName(host);
 			s = new MulticastSocket(6789);
 			s.joinGroup(group);
+			s.setSoTimeout(1000);
 			messageIn = new DatagramPacket(buffer, buffer.length);
 			s.receive(messageIn);
-		} catch (SocketException e) {
-			System.out.println("Socket: " + e.getMessage());
-		} catch (IOException e) {
-			System.out.println("IO: " + e.getMessage());
 		} finally {
 			if (s != null)
 				s.close();
@@ -53,41 +56,4 @@ public class MulticastPeer {
 		return new String(messageIn.getData());
 
 	}
-
-	static public void enviarUnicast(int port) {
-		byte[] msg = new String(String.valueOf(port)).getBytes();
-
-		DatagramSocket client;
-		try {
-			client = new DatagramSocket();
-			InetAddress inetAddr = InetAddress.getLocalHost();
-			SocketAddress socketAddr = new InetSocketAddress(inetAddr, port);
-			DatagramPacket sendPacket = new DatagramPacket(msg, msg.length, socketAddr);
-			client.send(sendPacket);
-			client.close();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	private static final int MAXREV = 255;
-
-	static public void receberUnicast(int port) {
-		try {
-			int i=0;
-			DatagramSocket server = new DatagramSocket(port);
-			DatagramPacket recvPacket = new DatagramPacket(new byte[MAXREV], MAXREV);
-
-			while (i<2) {
-				server.receive(recvPacket);
-				i++;
-			}
-			server.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
 }
