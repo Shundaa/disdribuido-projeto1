@@ -11,7 +11,7 @@ import java.util.Scanner;
  */
 public class App {
 
-	static Estado estado = Estado.NORMAL;
+	static Estado estado = null;
 	static Scanner ler = new Scanner(System.in);
 	static List<String> portList = new ArrayList<String>();
 	static String port;
@@ -26,29 +26,25 @@ public class App {
 				portList.add("8084");
 				System.out.println("Digite uma porta para unicast Exemplo:[8081,8082,8083,8084] ");
 				port = ler.nextLine();
-				while (true) {
-					if(estado == Estado.ELEICAO){
-						
-					}
-					estado = Interface.printInterface(estado);
-					if (estado == Estado.WANTED) {
-						MulticastPeer.pedirRecursoMultcast(Integer.valueOf(port));
-						System.out.println("\nEstado: " + estado.getDescricao());
-						MulticastPeer.receberUnicast(Integer.valueOf(port));
-						estado = Estado.HELD;
-					}
-				}
+				estado = Estado.NORMAL;
 			}
 		}.start();
-
-		new Thread() {
+			new Thread() {
 			@Override
 			public void run() {
 				while (true) {
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
 					if(estado == Estado.NORMAL){
 						try{
 							MulticastPeer.receberOla();
 						}catch(SocketTimeoutException e){
+							System.out.println("De um sinal para iniciar eleicao");
+							ler.nextLine();
 							estado = Estado.ELEICAO;
 						}catch(Exception e1){
 							System.out.println("Erro");
@@ -57,9 +53,10 @@ public class App {
 					if(estado == Estado.ELEICAO){
 						for (int i=0;i<4;i++) {
 							if(Integer.valueOf(port) < Integer.valueOf(portList.get(i)) && !portList.get(i).equals(coordenador_eleito))
-								UniCastPeer.pedirCoord(Integer.valueOf(port));
+								UniCastPeer.pedirCoord(Integer.valueOf(portList.get(i)));
+						}
 								if(UniCastPeer.receberRespostaBully(Integer.valueOf(port))){
-									if(port !=null && port.equals(coordenador_eleito) && estado != Estado.COORD){
+									if(port !=null && !port.equals(coordenador_eleito) && estado != Estado.COORD){
 										MulticastPeer.enviarIdCoord(Integer.valueOf(port));
 										estado = Estado.COORD;
 									}
@@ -67,7 +64,7 @@ public class App {
 								else{
 									estado = Estado.NORMAL;
 								}
-						}
+						
 					}
 				}
 			}
@@ -77,9 +74,36 @@ public class App {
 			@Override
 			public void run() {
 				while (true) {
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
 					if(estado==Estado.COORD){
 						MulticastPeer.enviarOla();
 					}
+				}
+			}
+		}.start();
+		new Thread() {
+			@Override
+			public void run() {
+				while (true) {
+					try {
+						Thread.sleep(10);
+						if(port != null){
+							String portRecebida = UniCastPeer.receberPedidoCoord(Integer.valueOf(port));
+							if(Integer.valueOf(portRecebida)< Integer.valueOf(port))
+							{System.out.println(portRecebida);
+								UniCastPeer.responderPedidoCoord(Integer.valueOf(portRecebida));
+							}
+						}
+					} catch (InterruptedException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
+					
 				}
 			}
 		}.start();

@@ -16,6 +16,7 @@ public class MulticastPeer {
 	static public void enviarIdCoord(int port) {
 		MulticastSocket s = null;
 		try {
+			System.out.println("Enviando id coord");
 			InetAddress group = InetAddress.getByName(host);
 			s = new MulticastSocket(6789);
 			s.joinGroup(group);
@@ -31,12 +32,43 @@ public class MulticastPeer {
 				s.close();
 		}
 	}
-	static public String enviarOla() {
-		return null;
+	static public void enviarOla() {
+		MulticastSocket s = null;
+		try {
+			InetAddress group = InetAddress.getByName(host);
+			s = new MulticastSocket(6789);
+			s.joinGroup(group);
+			byte[] m = "Ola!".getBytes();
+			DatagramPacket messageOut = new DatagramPacket(m, m.length, group, 6789);
+			s.send(messageOut);
+		} catch (SocketException e) {
+			System.out.println("Socket: " + e.getMessage());
+		} catch (IOException e) {
+			System.out.println("IO: " + e.getMessage());
+		} finally {
+			if (s != null)
+				s.close();
+		}
 	}
 
 	static public String receberOla() throws Exception{
-		return null;
+		MulticastSocket s = null;
+		DatagramPacket messageIn=null;
+		try {
+			System.out.println("Receber ola");
+			byte[] buffer = new byte[1000];
+			InetAddress group = InetAddress.getByName(host);
+			s = new MulticastSocket(6789);
+			s.joinGroup(group);
+			s.setSoTimeout(10000);
+			messageIn = new DatagramPacket(buffer, buffer.length);
+			s.receive(messageIn);
+		} finally {
+			if (s != null)
+				s.close();
+		}
+		return new String(messageIn.getData());
+
 	}
 	static public String receberCoord() throws Exception{
 		MulticastSocket s = null;
@@ -46,7 +78,7 @@ public class MulticastPeer {
 			InetAddress group = InetAddress.getByName(host);
 			s = new MulticastSocket(6789);
 			s.joinGroup(group);
-			s.setSoTimeout(1000);
+			s.setSoTimeout(10000);
 			messageIn = new DatagramPacket(buffer, buffer.length);
 			s.receive(messageIn);
 		} finally {
