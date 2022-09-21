@@ -27,7 +27,7 @@ public class App {
 				portList.add("8082");
 				portList.add("8083");
 				portList.add("8084");
-				System.out.println("Digite uma porta para unicast Exemplo: " + portList.toString());
+				System.out.println("Digite uma porta para unicast Exemplo:  " + portList.toString());
 				port = ler.nextLine();
 				coordenador_eleito = "9999";
 			}
