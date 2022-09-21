@@ -5,17 +5,15 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.MulticastSocket;
 import java.net.SocketAddress;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
 public class UniCastPeer {
 	static String host = "239.252.10.11";
 
 	static DatagramSocket server;
-	
-	static public void pedirCoord(int port) {
+
+	static public void pedirCoord(int portDestino,int port) {
 		System.out.println("Pedir coord");
 		byte[] msg = new String(String.valueOf(port)).getBytes();
 
@@ -23,7 +21,7 @@ public class UniCastPeer {
 		try {
 			client = new DatagramSocket();
 			InetAddress inetAddr = InetAddress.getLocalHost();
-			SocketAddress socketAddr = new InetSocketAddress(inetAddr, port);
+			SocketAddress socketAddr = new InetSocketAddress(inetAddr, portDestino);
 			DatagramPacket sendPacket = new DatagramPacket(msg, msg.length, socketAddr);
 			client.send(sendPacket);
 			client.close();
@@ -33,25 +31,26 @@ public class UniCastPeer {
 		}
 	}
 
-	static public String receberPedidoCoord(int port) {
+	static public String receberUniCast(int port) {
 		try {
 			System.out.println("recebepedidocoord");
-			if(server==null)
-				server = new DatagramSocket(port);
+			server = new DatagramSocket(port);
+			server.setSoTimeout(0);
 			DatagramPacket recvPacket = new DatagramPacket(new byte[MAXREV], MAXREV);
 			server.receive(recvPacket);
 			server.close();
-			return recvPacket.getData().toString().trim();
-		}
-		 catch (IOException e) {
+			String texto = new String( recvPacket.getData(), "UTF-8");
+			System.out.println("Porta recebida: "+ texto.trim());
+			return texto.trim();
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		return null;
 	}
+
 	static public void responderPedidoCoord(int port) {
-		System.out.println("Responder Coord");
-		byte[] msg = new String(String.valueOf(port)).getBytes();
+		System.out.println("Responder Bully");
+		byte[] msg = new String("Bully").getBytes();
 
 		DatagramSocket client;
 		try {
@@ -68,22 +67,5 @@ public class UniCastPeer {
 	}
 
 	private static final int MAXREV = 255;
-
-	static public Boolean receberRespostaBully(int port) {
-		try {
-			System.out.println("BULLYYYYYYYY8");
-			DatagramPacket recvPacket = new DatagramPacket(new byte[MAXREV], MAXREV);
-			server.setSoTimeout(1000);
-			server.receive(recvPacket);
-			server.close();
-		} catch (SocketTimeoutException e1) {
-			return true;
-		}
-		 catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return false;
-	}
 
 }

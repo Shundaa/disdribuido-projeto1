@@ -1,6 +1,5 @@
 package distribuido.projeto1;
 
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -11,11 +10,15 @@ import java.util.Scanner;
  */
 public class App {
 
-	static Estado estado = null;
+	// static Estado estado = null;
 	static Scanner ler = new Scanner(System.in);
 	static List<String> portList = new ArrayList<String>();
 	static String port;
 	static String coordenador_eleito;
+	static String mensagemRecebidaMultiCast;
+	static String mensagemRecebidaUniCast;
+	static Boolean eleicao = false;
+
 	public static void main(String[] args) {
 		new Thread() {
 			@Override
@@ -24,49 +27,80 @@ public class App {
 				portList.add("8082");
 				portList.add("8083");
 				portList.add("8084");
-				System.out.println("Digite uma porta para unicast Exemplo:[8081,8082,8083,8084] ");
+				System.out.println("Digite uma porta para unicast Exemplo: " + portList.toString());
 				port = ler.nextLine();
-				estado = Estado.NORMAL;
+				coordenador_eleito = "9999";
 			}
 		}.start();
-			new Thread() {
+		new Thread() {
 			@Override
 			public void run() {
 				while (true) {
 					try {
-						Thread.sleep(10);
+						Thread.sleep(50);
+						if (port != null) {
+							if (coordenador_eleito == null) {
+
+							}
+						}
 					} catch (InterruptedException e2) {
 						// TODO Auto-generated catch block
 						e2.printStackTrace();
 					}
-					if(estado == Estado.NORMAL){
-						try{
-							MulticastPeer.receberOla();
-						}catch(SocketTimeoutException e){
-							System.out.println("De um sinal para iniciar eleicao");
-							ler.nextLine();
-							estado = Estado.ELEICAO;
-						}catch(Exception e1){
-							System.out.println("Erro");
+				}
+			}
+		}.start();
+		new Thread() {
+			@Override
+			public void run() {
+				while (true) {
+					try {
+						Thread.sleep(50);
+						try {
+
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
 						}
-					}
-					if(estado == Estado.ELEICAO){
-						for (int i=0;i<4;i++) {
-							if(Integer.valueOf(port) < Integer.valueOf(portList.get(i)) && !portList.get(i).equals(coordenador_eleito))
-								UniCastPeer.pedirCoord(Integer.valueOf(portList.get(i)));
-						}
-								if(UniCastPeer.receberRespostaBully(Integer.valueOf(port))){
-									if(port !=null && !port.equals(coordenador_eleito) && estado != Estado.COORD){
-										MulticastPeer.enviarIdCoord(Integer.valueOf(port));
-										estado = Estado.COORD;
-									}
-								}
-								else{
-									estado = Estado.NORMAL;
-								}
-						
+					} catch (InterruptedException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
 					}
 				}
+
+			}
+		}.start();
+
+		new Thread() {
+			@Override
+			public void run() {
+				while (true) {
+					try {
+						Thread.sleep(50);
+						if (port != null) {
+							if (!port.contains(coordenador_eleito)) {
+								try {
+									mensagemRecebidaMultiCast = MulticastPeer.receberMutiCast().trim();
+									if (!mensagemRecebidaMultiCast.contains("Ola")) {
+										System.out.println("Novo Coordenador: " + mensagemRecebidaMultiCast);
+										coordenador_eleito = mensagemRecebidaMultiCast;
+										eleicao = false;
+									}
+
+								} catch (Exception e) {
+									if (!eleicao)
+										new Thread(inciarEleicao).start();
+								}
+							} else {
+								MulticastPeer.enviarOla();
+							}
+						}
+					} catch (InterruptedException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
+				}
+
 			}
 		}.start();
 
@@ -76,36 +110,61 @@ public class App {
 				while (true) {
 					try {
 						Thread.sleep(10);
-					} catch (InterruptedException e2) {
-						// TODO Auto-generated catch block
-						e2.printStackTrace();
-					}
-					if(estado==Estado.COORD){
-						MulticastPeer.enviarOla();
-					}
-				}
-			}
-		}.start();
-		new Thread() {
-			@Override
-			public void run() {
-				while (true) {
-					try {
-						Thread.sleep(10);
-						if(port != null){
-							String portRecebida = UniCastPeer.receberPedidoCoord(Integer.valueOf(port));
-							if(Integer.valueOf(portRecebida)< Integer.valueOf(port))
-							{System.out.println(portRecebida);
-								UniCastPeer.responderPedidoCoord(Integer.valueOf(portRecebida));
+						if (port != null) {
+							mensagemRecebidaUniCast = UniCastPeer.receberUniCast(Integer.valueOf(port));
+							if (mensagemRecebidaUniCast.contains("Bully")) {
+								// sair da eleicao//
+								eleicao = false;
+							} else {
+								// if (Integer.valueOf(mensagemRecebidaUniCast) < Integer.valueOf(port)) {
+								System.out.println(mensagemRecebidaUniCast);
+								UniCastPeer.responderPedidoCoord(Integer.valueOf(mensagemRecebidaUniCast));
+								// }
 							}
+
 						}
 					} catch (InterruptedException e2) {
 						// TODO Auto-generated catch block
 						e2.printStackTrace();
 					}
-					
+
 				}
 			}
 		}.start();
 	}
+
+	private static Runnable inciarEleicao = new Runnable() {
+		public void run() {
+			System.out.println("Coordenador não respondeu");
+			eleicao = true;
+			coordenador_eleito = "9999";
+			System.out.println("Iniciar Eleicao? Para sim digite 1, para nao digite 0");
+			// ler.nextLine();
+			if (ler.nextInt() == 0) {
+				eleicao = false;
+				return;
+			}
+			if (port.contentEquals("8084")) {
+				MulticastPeer.enviarIdCoord(Integer.valueOf(port));
+				coordenador_eleito = port;
+			} else {
+				for (int i = 0; i < 4; i++) {
+					if (Integer.valueOf(port) < Integer.valueOf(portList.get(i))
+							&& !portList.get(i).equals(coordenador_eleito))
+						UniCastPeer.pedirCoord(Integer.valueOf(portList.get(i)), Integer.valueOf(port));
+				}
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				if (eleicao) {
+					MulticastPeer.enviarIdCoord(Integer.valueOf(port));
+					coordenador_eleito = port;
+				}
+				eleicao = false;
+			}
+		}
+	};
 }
