@@ -1,0 +1,18 @@
+import java.rmi.*;
+import java.rmi.server.*;
+import java.util.ArrayList;
+
+public class Compromisso {
+    String Data;
+    String Horario;
+    String Nome;
+    Arraylist<Cliente> Convidados;
+
+    public Compromisso(String Nome, String Data, String Horario,Arraylist<Cliente> Convidados) {
+        this.Nome = Nome
+        this.Data = Data;
+        this.Horario = Hora;
+        this.Convidados = Assunto;
+    }
+
+}

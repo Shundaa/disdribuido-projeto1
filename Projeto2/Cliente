@@ -1,0 +1,12 @@
+import java.rmi.*;
+import java.rmi.server.*;
+import java.util.ArrayList;
+
+public class Cliente {
+    public void ChecarAssinatura(String[] str) throws RemoteException;
+
+    public Compromisso receberCompromisso() throws RemoteException;
+
+
+
+}

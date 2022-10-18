@@ -1,0 +1,21 @@
+import java.rmi.*;
+import java.rmi.server.*;
+import java.util.ArrayList;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.registry.*;
+import java.rmi.RemoteException;
+
+
+public class Servidor {
+
+    public void AdicionarCompromisso(String[] str) throws RemoteException;
+
+    public Compromisso ConsultarCompromisso(Date str) throws RemoteException;
+
+    public void CancelarCompromisso(String[] str) throws RemoteException;
+
+    public void CadastrarUsuario(String data) throws RemoteException;
+
+
+}
